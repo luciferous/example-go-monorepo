@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"example.com/common/null"
+	"fmt"
+)
 
 func main() {
-	fmt.Println("other")
+	fmt.Println(null.One)
 }
