@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+case $1 in
+dependents)
+  if [[ -z $2 ]]; then
+    2>&1 echo "Usage: $0 dependents <project>"
+    exit 1
+  fi
+  for P in $(ls -d */|grep -v vendor); do
+    go list -f '{{range $_, $x := .Imports}}{{if eq $x "example.com/'$2'"}}'$P'{{end}}{{end}}' "./$P"
+  done
+  ;;
+*)
+  2>&1 echo "No such command: $1"
+  2>&1 echo "Usage: $0 <command> <opts>"
+  ;;
+esac
