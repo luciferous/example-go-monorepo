@@ -15,15 +15,27 @@ build() {
 	go build -o $1/main ./$1
 }
 
+dependencies() {
+	go list -f '{{join .Imports "\n"}}' ./$1
+}
+
 dependents() {
 	for P in $(ls -d */|grep -v vendor); do
-		go list -f '{{range $_, $x := .Imports}}{{if eq $x "example.com/'$1'"}}'$P'{{end}}{{end}}' "./$P"
+		go list -f '{{range $_, $x := .Imports}}{{if eq $x "example.com/'$1'"}}'$P'{{end}}{{end}}' ./$P
 	done
+}
+
+doTest() {
+	go test ./$1
 }
 
 # command switch
 
 case $1 in
+dependencies)
+	[[ -n $2 ]] || die "Usage: $0 dependencies <project>"
+	dependencies $2
+	;;
 dependents)
 	[[ -n $2 ]] || die "Usage: $0 dependents <project>"
 	dependents $2
@@ -31,6 +43,10 @@ dependents)
 build)
 	[[ -n $2 ]] || die "Usage: $0 build <project>"
 	build $2
+	;;
+test)
+	[[ -n $2 ]] || die "Usage: $0 test <project>"
+	doTest $2
 	;;
 *)
 	die "No such command: $1\nUsage: $0 <command> <opts>"
