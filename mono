@@ -2,18 +2,37 @@
 
 set -e
 
+# utilities
+
+die () {
+	echo "$*" >&2
+	exit 1
+}
+
+# commands
+
+build() {
+	go build -o $1/main ./$1
+}
+
+dependents() {
+	for P in $(ls -d */|grep -v vendor); do
+		go list -f '{{range $_, $x := .Imports}}{{if eq $x "example.com/'$1'"}}'$P'{{end}}{{end}}' "./$P"
+	done
+}
+
+# command switch
+
 case $1 in
 dependents)
-  if [[ -z $2 ]]; then
-    2>&1 echo "Usage: $0 dependents <project>"
-    exit 1
-  fi
-  for P in $(ls -d */|grep -v vendor); do
-    go list -f '{{range $_, $x := .Imports}}{{if eq $x "example.com/'$2'"}}'$P'{{end}}{{end}}' "./$P"
-  done
-  ;;
+	[[ -n $2 ]] || die "Usage: $0 dependents <project>"
+	dependents $2
+	;;
+build)
+	[[ -n $2 ]] || die "Usage: $0 build <project>"
+	build $2
+	;;
 *)
-  2>&1 echo "No such command: $1"
-  2>&1 echo "Usage: $0 <command> <opts>"
-  ;;
+	die "No such command: $1\nUsage: $0 <command> <opts>"
+	;;
 esac
